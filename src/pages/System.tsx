@@ -73,7 +73,7 @@ const System: React.FC = () => {
   };
 
   return (
-    <div className="p-6 space-y-6 min-h-full">
+    <div className="p-6 space-y-6">
       <div className="flex items-center space-x-2">
         <Activity className="w-6 h-6 text-primary" />
         <h1 className="text-3xl font-bold">System Monitor</h1>

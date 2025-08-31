@@ -227,7 +227,7 @@ const Calendar: React.FC = () => {
   });
 
   return (
-    <div className="p-6 space-y-6 min-h-full">
+    <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <CalendarIcon className="w-6 h-6 text-primary" />

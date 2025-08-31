@@ -124,7 +124,7 @@ const Weather: React.FC = () => {
   // Loading state
   if (isLoading && !weather) {
     return (
-      <div className="p-6 space-y-6 min-h-full">
+      <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Cloud className="w-6 h-6 text-primary" />
@@ -144,7 +144,7 @@ const Weather: React.FC = () => {
   // Error state
   if (error && !weather) {
     return (
-      <div className="p-6 space-y-6 min-h-full">
+      <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Cloud className="w-6 h-6 text-primary" />
@@ -166,7 +166,7 @@ const Weather: React.FC = () => {
                 <div className="flex gap-2 justify-center">
                   <Button onClick={() => refetch()}>Try Again</Button>
                   <Button onClick={() => getWeatherByCity.mutate('Mumbai')} variant="outline">
-                    Load Mumbai
+                    Load Different City
                   </Button>
                 </div>
               </div>
@@ -180,7 +180,7 @@ const Weather: React.FC = () => {
   // No weather data
   if (!weather) {
     return (
-      <div className="p-6 space-y-6 min-h-full">
+      <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Cloud className="w-6 h-6 text-primary" />
@@ -195,7 +195,7 @@ const Weather: React.FC = () => {
   }
 
   return (
-    <div className="p-6 space-y-6 min-h-full">
+    <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <Cloud className="w-6 h-6 text-primary" />

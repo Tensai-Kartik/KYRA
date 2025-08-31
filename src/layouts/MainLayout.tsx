@@ -1,9 +1,12 @@
 import React from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { Navigation } from '@/components/Navigation';
 import { WidgetPanel } from '@/components/WidgetPanel';
 
 export const MainLayout: React.FC = () => {
+  const location = useLocation();
+  const isAssistantPage = location.pathname === '/';
+
   return (
     <div className="h-screen w-full bg-background flex overflow-hidden">
       {/* Left Sidebar - Navigation */}
@@ -13,7 +16,7 @@ export const MainLayout: React.FC = () => {
       
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 relative z-20">
-        <main className="flex-1">
+        <main className={`flex-1 ${isAssistantPage ? '' : 'overflow-y-auto'}`}>
           <Outlet />
         </main>
       </div>
