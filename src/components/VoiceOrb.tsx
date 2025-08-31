@@ -3,6 +3,7 @@ import { Mic, MicOff, Volume2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+
 import kyraLogo from '@/assets/kyra.png';
 
 interface VoiceOrbProps {
@@ -17,12 +18,13 @@ export const VoiceOrb: React.FC<VoiceOrbProps> = ({ onStatusChange }) => {
   
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const synthesisRef = useRef<SpeechSynthesis | null>(null);
+  const currentUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const speechQueueRef = useRef<string[]>([]);
+  const isSpeakingRef = useRef(false);
 
   useEffect(() => {
     // Initialize speech synthesis
-    if ('speechSynthesis' in window) {
-      synthesisRef.current = window.speechSynthesis;
-    }
+    synthesisRef.current = window.speechSynthesis;
 
     // Check if speech recognition is available
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -41,7 +43,7 @@ export const VoiceOrb: React.FC<VoiceOrbProps> = ({ onStatusChange }) => {
         
         recognitionRef.current.onend = () => {
           setIsListening(false);
-          if (!isProcessing) {
+          if (!isProcessing && !isSpeakingRef.current) {
             onStatusChange?.('idle');
           }
         };
@@ -64,7 +66,7 @@ export const VoiceOrb: React.FC<VoiceOrbProps> = ({ onStatusChange }) => {
             });
           } finally {
             setIsProcessing(false);
-            if (!isSpeaking) {
+            if (!isSpeakingRef.current) {
               onStatusChange?.('idle');
             }
           }
@@ -96,7 +98,7 @@ export const VoiceOrb: React.FC<VoiceOrbProps> = ({ onStatusChange }) => {
         synthesisRef.current.cancel();
       }
     };
-  }, [onStatusChange, isProcessing, isSpeaking]);
+  }, [onStatusChange]);
 
   const processUserInput = async (input: string) => {
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
@@ -108,7 +110,7 @@ export const VoiceOrb: React.FC<VoiceOrbProps> = ({ onStatusChange }) => {
 
     try {
       const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
       
       const prompt = `You are Kyra, a futuristic AI assistant inspired by Jarvis. Respond concisely and helpfully to: "${input}"`;
       
@@ -127,37 +129,96 @@ export const VoiceOrb: React.FC<VoiceOrbProps> = ({ onStatusChange }) => {
 
   const speak = async (text: string): Promise<void> => {
     return new Promise((resolve) => {
+      console.log('Speech: Attempting to speak:', text);
+
       if (!synthesisRef.current) {
+        console.error('Speech: Synthesis not available');
         resolve();
         return;
       }
 
-      // Cancel any ongoing speech
+      // If already speaking, add to queue and wait
+      if (isSpeakingRef.current) {
+        console.log('Speech: Already speaking, adding to queue');
+        speechQueueRef.current.push(text);
+        resolve();
+        return;
+      }
+
+      // Cancel any ongoing speech and wait for the engine to reset
       synthesisRef.current.cancel();
-      
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.9;
-      utterance.pitch = 1.1;
-      utterance.volume = 0.8;
-      
-      utterance.onstart = () => {
-        setIsSpeaking(true);
-        onStatusChange?.('speaking');
-      };
-      
-      utterance.onend = () => {
-        setIsSpeaking(false);
-        onStatusChange?.('idle');
-        resolve();
-      };
-      
-      utterance.onerror = () => {
-        setIsSpeaking(false);
-        onStatusChange?.('idle');
-        resolve();
-      };
-      
-      synthesisRef.current.speak(utterance);
+
+      // Longer delay to let the speech synthesis engine properly reset
+      setTimeout(() => {
+        const utterance = new SpeechSynthesisUtterance(text);
+        currentUtteranceRef.current = utterance;
+        
+        utterance.rate = 0.9;
+        utterance.pitch = 1.1;
+        utterance.volume = 0.8;
+
+        utterance.onstart = () => {
+          console.log('Speech: Started speaking');
+          setIsSpeaking(true);
+          isSpeakingRef.current = true;
+          setIsProcessing(false); // Clear processing state when speech starts
+          onStatusChange?.('speaking');
+          
+          // Stop listening when speaking to prevent overlapping
+          if (recognitionRef.current && isListening) {
+            recognitionRef.current.stop();
+          }
+        };
+
+        utterance.onend = () => {
+          console.log('Speech: Finished speaking');
+          setIsSpeaking(false);
+          isSpeakingRef.current = false;
+          currentUtteranceRef.current = null;
+          setIsProcessing(false); // Ensure processing state is cleared
+          onStatusChange?.('idle');
+          
+          // Process next item in queue if available
+          if (speechQueueRef.current.length > 0) {
+            const nextText = speechQueueRef.current.shift();
+            if (nextText) {
+              console.log('Speech: Processing next item in queue');
+              setTimeout(() => speak(nextText), 200);
+            }
+          }
+          
+          resolve();
+        };
+
+        utterance.onerror = (event) => {
+          console.error('Speech: Error occurred:', event);
+          setIsSpeaking(false);
+          isSpeakingRef.current = false;
+          currentUtteranceRef.current = null;
+          setIsProcessing(false); // Ensure processing state is cleared on error
+          onStatusChange?.('idle');
+          
+          // Process next item in queue if available
+          if (speechQueueRef.current.length > 0) {
+            const nextText = speechQueueRef.current.shift();
+            if (nextText) {
+              console.log('Speech: Processing next item in queue after error');
+              setTimeout(() => speak(nextText), 300);
+            }
+          }
+          
+          resolve();
+        };
+
+        // Ensure speech synthesis is ready and not paused
+        if (synthesisRef.current.paused) {
+          synthesisRef.current.resume();
+        }
+
+        console.log('Speech: About to speak utterance');
+        synthesisRef.current.speak(utterance);
+        console.log('Speech: Utterance queued');
+      }, 300); // Increased delay to 300ms to prevent "interrupted" errors
     });
   };
 
@@ -180,6 +241,12 @@ export const VoiceOrb: React.FC<VoiceOrbProps> = ({ onStatusChange }) => {
   };
 
   const toggleListening = async () => {
+    // If currently speaking, stop speaking instead
+    if (isSpeakingRef.current) {
+      stopSpeaking();
+      return;
+    }
+
     if (hasPermission === null) {
       await requestMicrophonePermission();
       return;
@@ -210,6 +277,29 @@ export const VoiceOrb: React.FC<VoiceOrbProps> = ({ onStatusChange }) => {
     }
   };
 
+  const stopListening = () => {
+    if (recognitionRef.current && isListening) {
+      recognitionRef.current.stop();
+    }
+  };
+
+  const stopSpeaking = () => {
+    if (synthesisRef.current && isSpeakingRef.current) {
+      synthesisRef.current.cancel();
+      setIsSpeaking(false);
+      isSpeakingRef.current = false;
+      currentUtteranceRef.current = null;
+      setIsProcessing(false); // Clear processing state when stopping speech
+      speechQueueRef.current = []; // Clear the queue
+      onStatusChange?.('idle');
+    }
+  };
+
+  const clearSpeechQueue = () => {
+    speechQueueRef.current = [];
+    console.log('Speech: Queue cleared');
+  };
+
   const getOrbState = () => {
     if (isSpeaking) return 'speaking';
     if (isProcessing) return 'processing';
@@ -234,7 +324,7 @@ export const VoiceOrb: React.FC<VoiceOrbProps> = ({ onStatusChange }) => {
   };
 
   return (
-    <div className="flex flex-col items-center space-y-6">
+    <div className="flex flex-col items-center space-y-6 relative">
       {/* Main Orb */}
       <div 
         className={getOrbClasses()}
@@ -278,16 +368,59 @@ export const VoiceOrb: React.FC<VoiceOrbProps> = ({ onStatusChange }) => {
         {isSpeaking && (
           <>
             <Volume2 className="w-4 h-4 text-accent animate-pulse" />
-            <span>Speaking...</span>
+            <span>
+              Speaking...
+              {speechQueueRef.current.length > 0 && (
+                <span className="ml-1 text-xs text-muted-foreground">
+                  (+{speechQueueRef.current.length} queued)
+                </span>
+              )}
+            </span>
           </>
         )}
         {getOrbState() === 'idle' && (
           <>
             <MicOff className="w-4 h-4" />
-            <span>Click to speak</span>
+            <span>Click the orb to let magic begin</span>
           </>
         )}
       </div>
+
+      {/* Stop Listening Button - Fixed Position */}
+      {isListening && (
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={stopListening}
+          className="animate-pulse absolute -bottom-20 left-1/2 transform -translate-x-1/2 z-50"
+        >
+          Stop Listening
+        </Button>
+      )}
+
+      {/* Stop Speaking Button - Fixed Position */}
+      {isSpeaking && (
+        <div className="flex flex-col items-center space-y-2 absolute -bottom-20 left-1/2 transform -translate-x-1/2 z-50">
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={stopSpeaking}
+            className="animate-pulse"
+          >
+            Stop Speaking
+          </Button>
+          {speechQueueRef.current.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={clearSpeechQueue}
+              className="text-xs"
+            >
+              Clear Queue ({speechQueueRef.current.length})
+            </Button>
+          )}
+        </div>
+      )}
 
       {/* Permission Request */}
       {hasPermission === false && (
@@ -299,6 +432,8 @@ export const VoiceOrb: React.FC<VoiceOrbProps> = ({ onStatusChange }) => {
           Grant Microphone Access
         </Button>
       )}
+
+
     </div>
   );
 };

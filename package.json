@@ -1,14 +1,35 @@
 {
-  "name": "vite_react_shadcn_ts",
-  "private": true,
-  "version": "0.0.0",
+  "name": "kyra",
+  "description": "A futuristic AI assistant with unified voice and text chat capabilities, powered by Google's Gemini AI",
+  "version": "1.0.0",
+  "private": false,
   "type": "module",
+  "keywords": [
+    "ai-assistant",
+    "voice-recognition",
+    "chat-interface",
+    "gemini-ai",
+    "react",
+    "typescript",
+    "voice-ai"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/kyra.git"
+  },
+  "homepage": "https://yourusername.github.io/kyra",
+  "bugs": {
+    "url": "https://github.com/yourusername/kyra/issues"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "build:dev": "vite build --mode development",
-    "lint": "eslint .",
-    "preview": "vite preview"
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

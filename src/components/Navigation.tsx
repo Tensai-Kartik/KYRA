@@ -134,8 +134,55 @@ export const Navigation: React.FC = () => {
 
         {/* Footer */}
         <div className="p-4 border-t border-sidebar-border">
+          {/* Feedback Section */}
+          <div className="mb-3 text-center">
+            <button
+              onClick={() => {
+                console.log('Feedback button clicked!');
+                try {
+                  // Try the mailto approach first
+                  const mailtoLink = 'mailto:kartikvarunsharma2005@gmail.com?subject=KYRA Feedback';
+                  console.log('Attempting to open:', mailtoLink);
+                  
+                  // Method 1: Direct window.location
+                  window.location.href = mailtoLink;
+                  
+                  // Method 2: Fallback - open Gmail compose
+                  setTimeout(() => {
+                    const gmailLink = 'https://mail.google.com/mail/?view=cm&fs=1&to=kartikvarunsharma2005@gmail.com&su=KYRA Feedback';
+                    window.open(gmailLink, '_blank');
+                  }, 1000);
+                  
+                } catch (error) {
+                  console.error('Error opening email:', error);
+                  // Fallback to Gmail
+                  const gmailLink = 'https://mail.google.com/mail/?view=cm&fs=1&to=kartikvarunsharma2005@gmail.com&su=KYRA Feedback';
+                  window.open(gmailLink, '_blank');
+                }
+              }}
+              className="inline-flex items-center space-x-2 text-xs text-sidebar-foreground/60 hover:text-primary transition-colors duration-200 hover:underline cursor-pointer px-2 py-1 rounded hover:bg-sidebar-accent/30"
+              title="Send feedback via email"
+            >
+              <svg
+                className="w-3 h-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                />
+              </svg>
+              <span>Send Feedback</span>
+            </button>
+          </div>
+          
           <div className="text-xs text-sidebar-foreground/50 text-center">
-            Powered by Gemini AI
+            Made By Kartik Sharma
           </div>
         </div>
       </div>

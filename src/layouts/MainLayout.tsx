@@ -12,14 +12,14 @@ export const MainLayout: React.FC = () => {
       </div>
       
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
-        <main className="flex-1 overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 relative z-20">
+        <main className="flex-1">
           <Outlet />
         </main>
       </div>
       
       {/* Right Sidebar - Widgets */}
-      <div className="w-80 flex-shrink-0 border-l border-border/30 bg-background-secondary/20 backdrop-blur-sm">
+      <div className="w-80 flex-shrink-0 border-l border-border/30 bg-background-secondary/20 backdrop-blur-sm relative z-0">
         <WidgetPanel />
       </div>
     </div>
