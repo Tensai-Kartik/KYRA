@@ -110,7 +110,7 @@ export const VoiceOrb: React.FC<VoiceOrbProps> = ({ onStatusChange }) => {
 
     try {
       const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
       
       const prompt = `You are Kyra, a futuristic AI assistant inspired by Jarvis. Respond concisely and helpfully to: "${input}"`;
       

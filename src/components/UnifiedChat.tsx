@@ -168,7 +168,7 @@ export const UnifiedChat: React.FC = () => {
       }
 
       const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
       
       // Get conversation history for context (only text messages)
       const textConversationHistory = currentSession.messages
