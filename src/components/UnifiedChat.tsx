@@ -363,7 +363,7 @@ export const UnifiedChat: React.FC = () => {
         </div>
 
         {/* Main Chat Area */}
-        <div className="flex-1 flex flex-col relative z-50 min-w-0 overflow-hidden" style={{ zIndex: 9999 }}>
+        <div className="flex-1 flex flex-col relative z-50 min-w-0 overflow-hidden">
           {/* Header */}
           <div className="flex-shrink-0 p-4 backdrop-blur-sm">
             <div className="flex items-center justify-between">

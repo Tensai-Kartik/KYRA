@@ -156,8 +156,15 @@ export const VoiceSettings: React.FC<VoiceSettingsProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/70 backdrop-blur-sm">
+      <Card 
+        className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border border-gray-800 shadow-2xl"
+        style={{
+          backgroundColor: 'rgba(17, 20, 28, 1)', // solid dark (no transparency)
+          backdropFilter: 'none',                 // disables glass blur from theme
+          WebkitBackdropFilter: 'none',           // Safari fix
+        }}
+      >
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Settings className="w-5 h-5" />
